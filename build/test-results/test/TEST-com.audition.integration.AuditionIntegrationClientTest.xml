@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.audition.integration.AuditionIntegrationClientTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-10-07T06:35:25" hostname="JOUANACERA" time="1.087">
+  <properties/>
+  <testcase name="testGetPostWithComments()" classname="com.audition.integration.AuditionIntegrationClientTest" time="1.087"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

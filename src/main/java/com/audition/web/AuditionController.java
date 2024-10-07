@@ -22,6 +22,10 @@ public class AuditionController {
     public @ResponseBody List<AuditionPost> getPosts() {
 
         // TODO Add logic that filters response data based on the query param
+        // For example, filter by author, date range, etc.
+        // return auditionService.getFilteredPosts(filterCriteria);
+
+        // If no filtering is required, simply return all posts
 
         return auditionService.getPosts();
     }
