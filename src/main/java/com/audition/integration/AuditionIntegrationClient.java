@@ -77,7 +77,7 @@ public class AuditionIntegrationClient {
             AuditionPost post = getPostById(String.valueOf(postId));
 
             // Fetch the comments for the post
-            List<Comment> comments = restTemplate.getForObject(
+            List comments = restTemplate.getForObject(
                 auditionAPIUrl + "/posts/" + postId + "/comments",
                 List.class);
 

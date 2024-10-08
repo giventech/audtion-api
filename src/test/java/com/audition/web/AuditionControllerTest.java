@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.audition.common.logging.AuditionLogger;
+import com.audition.configuration.TestSecurityConfig;
 import com.audition.model.AuditionPost;
 import com.audition.model.AuditionPostComments;
 import com.audition.model.Comment;
@@ -18,12 +19,14 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.HttpClientErrorException;
 
 @WebMvcTest(AuditionController.class)
+@Import(TestSecurityConfig.class)
 class AuditControllerTest {
 
 
