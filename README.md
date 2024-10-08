@@ -1,6 +1,7 @@
 # Audition API
 
-The purpose of this Spring Boot application is to test general knowledge of SpringBoot, Java, Gradle etc. It is created for hiring needs of our company but can be used for other purposes.
+The purpose of this Spring Boot application is to test general knowledge of SpringBoot, Java, Gradle etc. It is created
+for hiring needs of our company but can be used for other purposes.
 
 ## Overarching expectations & Assessment areas
 
@@ -20,7 +21,7 @@ This is meant to be used for job applications and MUST showcase your full skills
 - Proper error handling.
 - Ability to use and configure rest template. We allow for half-setup object mapper and rest template
 - Not all information in the Application is perfect. It is expected that a person would figure these out and correct.
-  
+
 ## Getting Started
 
 ### Prerequisite tooling
@@ -28,7 +29,7 @@ This is meant to be used for job applications and MUST showcase your full skills
 - Any Springboot/Java IDE. Ideally IntelliJIdea.
 - Java 17
 - Gradle 8
-  
+
 ### Prerequisite knowledge
 
 - Java
@@ -51,13 +52,14 @@ __Optional__
 
 ---
 **NOTE** -
-It is  highly recommended that the application be loaded and started up to avoid any issues.
+It is highly recommended that the application be loaded and started up to avoid any issues.
 
 ---
 
 ## Audition Application information
 
-This section provides information on the application and what the needs to be completed as part of the audition application.
+This section provides information on the application and what the needs to be completed as part of the audition
+application.
 
 The audition consists of multiple TODO statements scattered throughout the codebase. The applicants are expected to:
 
@@ -68,14 +70,172 @@ The audition consists of multiple TODO statements scattered throughout the codeb
 - Make sure the application if functional.
 
 ## Submission process
-Applicants need to do the following to submit their work: 
+
+Applicants need to do the following to submit their work:
+
 - Clone this repository
-- Complete their work and zip up the working application. 
-- Applicants then need to send the ZIP archive to the email of the recruiting manager. This email be communicated to the applicant during the recruitment process. 
+- Complete their work and zip up the working application.
+- Applicants then need to send the ZIP archive to the email of the recruiting manager. This email be communicated to the
+  applicant during the recruitment process.
 
   
 ---
+
 ## Additional Information based on the implementation
 
-This section MUST be completed by applicants. It allows applicants to showcase their view on how an application can/should be documented. 
-Applicants can choose to do this in a separate markdown file that needs to be included when the code is committed. 
+This section MUST be completed by applicants. It allows applicants to showcase their view on how an application
+can/should be documented.
+Applicants can choose to do this in a separate markdown file that needs to be included when the code is committed.
+
+### Starting the application
+
+Launch application with gradle from the root of the repository
+
+```bash
+gradlew.bat bootRun
+```
+
+### Contracts
+
+Please navigate to the OpenAPI definition for the endpoinpts.  
+These contracts are validated with a number of Junit tests
+
+![img_1.png](img_1.png)
+
+### Code coverage
+
+Application was refactored to include code coverage checks
+
+[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
+![img.png](img.png)
+
+### Components testing.
+
+The use of integration test and components testing can be done for the audition-api.  
+These can be implemented as a separate gradle task. Integration tests can be run on their owne
+in CI pipeline. 2 benefits this is include
+
+1. CI completion cycle are shorter
+2. Integration test can be run to detect regression when several engineers work on same services
+3. Evaluating the behaviour of the application on different environments
+
+One approach in the integration test improvements is to leverage 'Wiremock' servers and stubs
+to further validate the application contracts
+
+`` java
+@ActiveProfiles
+``
+
+`` java
+@SpringBootTest
+``
+
+### Scalability and Performance considerations
+
+Below code perform two subsequent RestAPI calls. Although current data set is small,
+A better performance improvement would be to treat both requests as non blocking.
+
+```java
+AuditionPost post = getPostById(String.valueOf(postId));
+
+// Fetch the comments for the post
+List comments = restTemplate.getForObject(
+    auditionAPIUrl + "/posts/" + postId + "/comments",
+    List.class);
+```
+
+Non blocking request handling can be performed using WebClient.
+
+Required changes would include the following
+
+```java
+ public Mono<AuditionPostComments> getPostWithComments(String postId) {
+    return webClient.get()
+        .uri("/posts/{postId}", postId)
+        .retrieve()
+        .bodyToMono(AuditionPost.class)
+        .zipWith(webClient.get()
+            .uri("/posts/{postId}/comments", postId)
+            .retrieve()
+            .bodyToMono(List.class))
+        .map(tuple -> {
+            AuditionPostComments postComment = new AuditionPostComments();
+            postComment.setPost(tuple.getT1());
+            postComment.setComments(tuple.getT2());
+            return postComment;
+        })
+        .onErrorResume(e -> Mono.error(curatedServerException(e)));
+}
+```
+
+### Cloud DevOps and Agility
+
+The audition-api service will benefit from a CI/CD pipeline. This Feedback with a team of developer working on features
+feedback can come at the earliest to the Agile team
+This will contribute to augmentation of the velocity as well as the quality of the delivery (through maintaining tests
+active and enabling libraries and components scans)
+
+```yaml
+steps:
+  # Build unit tests only for faster performance and feedback
+  - name: gradle:8-jdk17
+    entrypoint: gradle
+    args: [ "test" ]
+    id: "unit_test_step"
+
+  # Package the application and dependencies as a jar file
+  - name: gradle:8-jdk17
+    entrypoint: gradle
+    id: "package_gradle"
+    args: [ "assemble" ]
+
+  # Build with integration tests only for faster performance and feedback
+  - name: gradle:8-jdk17
+    entrypoint: gradle
+    args: [ "build", "-x", "integrationTest" ]
+    id: "build_step"
+    waitFor: [ "unit_test_step" ]  # This step waits for unit_test_step to complete
+
+
+  - name: gradle:8-jdk17
+    entrypoint: gradle
+    args: [ "build", "integrationTest" ]
+    id: "integration_test_step"
+    waitFor: [ "build_step" ]  # This step waits for build_step to complete
+
+  # Build the Docker image using the jar file created from the previous steps
+  - name: gcr.io/cloud-builders/docker
+    args: [ 'build', '-t', 'australia-southeast1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/weather-api:$SHORT_SHA', '--build-arg=JAR_FILE=build/libs/weather-api-1.0.0.jar', '.' ]
+    timeout: 600s
+    id: "build_image"
+    waitFor: [ 'integration_test_step' ]  # This step waits for integration_test_step to complete
+
+  # Push the Docker image to the artifact repository
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', 'australia-southeast1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/weather-api:$SHORT_SHA' ]
+    waitFor: [ 'build_image' ]  # This step waits for integration_test_step to complete
+    id: "artifactory_push"
+
+  # Deploy image from Container Registry to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'full-stack'
+      - '--image'
+      - 'australia-southeast1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/weather-api:$SHORT_SHA'
+      - '--region'
+      - 'australia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--port'
+      - '8080'
+      - '--allow-unauthenticated'
+    waitFor: [ 'artifactory_push' ]  # This step waits for integration_test_step to complete
+
+timeout: 5000s
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+```

@@ -14,13 +14,17 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        //.loginPage("/login") // Custom login page
         http
             .csrf().disable() // Disable CSRF for simplicity; enable in production
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/actuator/info", "/actuator/health")
                 .permitAll() // Allow public access to info and health
-                .requestMatchers("/actuator/**").authenticated() // Require authentication for other actuator endpoints
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html")
+                .permitAll() // Allow access to Swagger UI
+                .requestMatchers("/posts/**")
+                .permitAll() // Allow access to Swagger UI
+                .requestMatchers("/actuator/**").authenticated()
+
                 .anyRequest().authenticated() // All other requests need authentication
             )
             .formLogin(AbstractAuthenticationFilterConfigurer::permitAll
