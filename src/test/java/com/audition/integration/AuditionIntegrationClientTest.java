@@ -1,6 +1,8 @@
 package com.audition.integration;
 
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,6 +31,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
@@ -144,6 +147,41 @@ public class AuditionIntegrationClientTest {
         assertEquals(expectedPost.getBody(), actualPost.getBody());
     }
 
+    @Test
+    void shouldRaiseSystemExceptionWhenPostNotFound() {
+        // Given
+        String postId = "1";
+        HttpClientErrorException notFoundException = new HttpClientErrorException(HttpStatus.NOT_FOUND);
+        when(restTemplate.getForObject(eq(mockAuditionAPIUrl + "/posts/" + postId), eq(AuditionPost.class)))
+            .thenThrow(notFoundException);
+
+        // When
+        Throwable thrown = catchThrowable(() -> auditionIntegrationClient.getPostById(postId));
+
+        // Then
+        assertThat(thrown).isInstanceOf(SystemException.class)
+            .hasMessage("Cannot find a Post with id 1")
+            .hasFieldOrPropertyWithValue("title", "Resource Not Found")
+            .hasFieldOrPropertyWithValue("statusCode", 404);
+    }
+
+    @Test
+    void shouldRaiseAnInternalServerErrorWhenCallToPostsAPIFails() {
+        String postId = "1";
+        // Given
+        HttpClientErrorException restClientException = new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
+        when(restTemplate.getForObject(eq(mockAuditionAPIUrl + "/posts/" + postId), eq(AuditionPost.class)))
+            .thenThrow(restClientException);
+
+        // when
+        SystemException exception = assertThrows(SystemException.class,
+            () -> auditionIntegrationClient.getPostById(postId));
+
+        // Then
+        assertEquals("Error retrieving post: ", exception.getMessage());
+        assertEquals("500", String.valueOf(exception.getStatusCode()));
+    }
+
 
     @Test
     public void shouldReturnAPostWithItsComments() {
@@ -198,4 +236,13 @@ public class AuditionIntegrationClientTest {
     }
 
 
+    @Test
+    public void shouldThrowServerExceptionWhenWhenGettingCommentsThrowsHttpServerException() {
+        // Arrange
+        when(restTemplate.getForObject(anyString(), eq(List.class)))
+            .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR, "Server Error"));
+
+        // Act & Assert
+        assertThrows(SystemException.class, () -> auditionIntegrationClient.getCommentsByPostId(1));
+    }
 }
