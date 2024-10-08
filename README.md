@@ -123,13 +123,13 @@ in CI pipeline. 2 benefits this is include
 One approach in the integration test improvements is to leverage 'Wiremock' servers and stubs
 to further validate the application contracts
 
-`` java
+```java
 @ActiveProfiles
-``
+```
 
-`` java
+```java
 @SpringBootTest
-``
+```
 
 ### Optimisation & Performance
 
