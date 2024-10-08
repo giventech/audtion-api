@@ -105,7 +105,8 @@ jacocoTestReport {
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
-                    'com/audition/common/**'  // Exclude an entire package
+                    'com/audition/common/**',
+                    'com/audition/service/**'// Exclude an entire package
             ])
         }))
     }
