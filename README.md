@@ -131,7 +131,7 @@ to further validate the application contracts
 @SpringBootTest
 ``
 
-### Scalability and Performance considerations
+### Optimisation & Performance
 
 Below code perform two subsequent RestAPI calls. Although current data set is small,
 A better performance improvement would be to treat both requests as non blocking.
@@ -169,12 +169,17 @@ Required changes would include the following
 }
 ```
 
-### Cloud DevOps and Agility
+### Resiliency
 
-The audition-api service will benefit from a CI/CD pipeline. This Feedback with a team of developer working on features
-feedback can come at the earliest to the Agile team
-This will contribute to augmentation of the velocity as well as the quality of the delivery (through maintaining tests
-active and enabling libraries and components scans)
+As the API has external endpoint dependencies. Circuit Breaker and Retry mechanisms
+will provide service the ability to recover from outage of downstream services.
+Resilience4j will be used.
+
+### DevOps and Team Agility / Release cycles
+
+CI/CD pipeline on Cloud provider will support incremental delivery of audition-api.
+Feedback to the Agile team can arrive early, enhancing both delivery velocity and quality by keeping tests active and
+enabling scans of libraries and components.
 
 ```yaml
 steps:
