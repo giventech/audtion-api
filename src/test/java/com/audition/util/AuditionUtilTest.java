@@ -2,6 +2,7 @@ package com.audition.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.audition.common.util.AuditionUtils;
 import com.audition.model.AuditionPost;
 import java.util.ArrayList;
 import java.util.Arrays;

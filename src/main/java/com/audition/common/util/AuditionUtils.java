@@ -1,4 +1,4 @@
-package com.audition.util;
+package com.audition.common.util;
 
 import com.audition.model.AuditionPost;
 import java.util.List;

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 import com.audition.common.exception.SystemException;
+import com.audition.common.util.AuditionConstants;
 import com.audition.model.AuditionPost;
 import com.audition.model.AuditionPostComments;
 import com.audition.model.Comment;
@@ -160,7 +161,7 @@ public class AuditionIntegrationClientTest {
 
         // Then
         assertThat(thrown).isInstanceOf(SystemException.class)
-            .hasMessage("Cannot find a Post with id 1")
+            .hasMessage(AuditionConstants.NO_RECORD_FOUND + "1")
             .hasFieldOrPropertyWithValue("title", "Resource Not Found")
             .hasFieldOrPropertyWithValue("statusCode", 404);
     }
@@ -178,7 +179,7 @@ public class AuditionIntegrationClientTest {
             () -> auditionIntegrationClient.getPostById(postId));
 
         // Then
-        assertEquals("Error retrieving post: ", exception.getMessage());
+        assertEquals(AuditionConstants.ERROR_RETRIEVING_POST, exception.getMessage());
         assertEquals("500", String.valueOf(exception.getStatusCode()));
     }
 

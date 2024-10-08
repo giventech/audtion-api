@@ -1,9 +1,9 @@
 package com.audition.web;
 
+import com.audition.common.util.AuditionUtils;
 import com.audition.model.AuditionPost;
 import com.audition.model.AuditionPostComments;
 import com.audition.service.AuditionService;
-import com.audition.util.AuditionUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
