@@ -5,6 +5,7 @@ import com.audition.model.AuditionPost;
 import com.audition.model.AuditionPostComments;
 import com.audition.model.Comment;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -30,21 +31,19 @@ public class AuditionIntegrationClient {
         // TODO make RestTemplate call to get Posts from https://jsonplaceholder.typicode.com/posts
         try {
 
-            RestTemplate restTemplate = new RestTemplate();
-            List<AuditionPost> posts = restTemplate.exchange(
+            return restTemplate.exchange(
                 auditionAPIUrl + "/posts",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<List<AuditionPost>>() {
                 }
             ).getBody();
-
-            return posts;
         } catch (RestClientException e) { // 4XX exceptions
             throw curatedServerException(e);
         }
 
     }
+
 
     public AuditionPost getPostById(final String id) {
         // TODO get post by post ID call from https://jsonplaceholder.typicode.com/posts/
@@ -54,11 +53,8 @@ public class AuditionIntegrationClient {
             AuditionPost post = restTemplate.getForObject(
                 auditionAPIUrl + "/posts/" + id,
                 AuditionPost.class);
-            // Check if the post is null, which indicates it was not found
-            if (post == null) {
-                throw new SystemException("Cannot find a Post with id " + id, "Resource Not Found", 404);
-            }
-            return post;
+            // Return an empty post
+            return Objects.requireNonNullElseGet(post, AuditionPost::new);
         } catch (final HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new SystemException("Cannot find a Post with id " + id, "Resource Not Found",
@@ -102,10 +98,9 @@ public class AuditionIntegrationClient {
     public List<Comment> getCommentsByPostId(int postId) {
         // Fetch the comments for the post
         try {
-            List<Comment> comments = restTemplate.getForObject(
+            return restTemplate.getForObject(
                 auditionAPIUrl + "/comments?postId=" + postId,
                 List.class);
-            return comments;
         } catch (RestClientException e) {
             throw curatedServerException(e);
         }
@@ -120,8 +115,7 @@ public class AuditionIntegrationClient {
                 clientError.getStatusCode().value(),
                 clientError
             );
-        } else if (e instanceof HttpServerErrorException) {
-            HttpServerErrorException serverError = (HttpServerErrorException) e;
+        } else if (e instanceof HttpServerErrorException serverError) {
             return new SystemException(
                 "Server error occurred (status " + serverError.getStatusCode() + "): " + serverError.getMessage(),
                 serverError.getStatusCode().value(),

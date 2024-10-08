@@ -18,11 +18,14 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.client.HttpClientErrorException;
 
 @WebMvcTest(AuditionController.class)
 class AuditControllerTest {
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -63,7 +66,7 @@ class AuditControllerTest {
     void testGetPostsWithFilter() throws Exception {
         // Mock service response
         AuditionPost post1 = new AuditionPost(1, 22, "Filtered Title", "Body 1");
-        List<AuditionPost> filteredPosts = Arrays.asList(post1);
+        List<AuditionPost> filteredPosts = List.of(post1);
 
         // Mock the behavior of the auditionService
         Mockito.when(auditionService.getPosts()).thenReturn(filteredPosts);
@@ -104,6 +107,30 @@ class AuditControllerTest {
             .andExpect(jsonPath("$.comments[0].body").value("Comment 1"))  // Check the first comment's body
             .andExpect(jsonPath("$.comments[1].body").value("Comment 2"))  // Check the second comment's body
             .andExpect(jsonPath("$.comments[2].body").value("Comment 3"));  // Check the second comment's body
+    }
+
+    @Test
+    void testGetPostWith5xxError() throws Exception {
+        // Mock service response
+        Mockito.when(auditionService.getPostById(Mockito.eq("1")))
+            .thenThrow(new IllegalArgumentException("Internal Server Error"));
+
+        // Perform a GET request for a specific post and verify the response
+        mockMvc.perform(get("/posts/1")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError());  // Check that the status is 500
+    }
+
+    @Test
+    void testGetPostWith4xxError() throws Exception {
+        // Mock service response
+        Mockito.when(auditionService.getPostById(Mockito.eq("1")))
+            .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+        // Perform a GET request for a specific post and verify the response
+        mockMvc.perform(get("/posts/1")
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound());  // Check that the status is 404
     }
 
 }

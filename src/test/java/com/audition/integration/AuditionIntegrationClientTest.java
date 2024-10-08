@@ -13,20 +13,25 @@ import com.audition.common.exception.SystemException;
 import com.audition.model.AuditionPost;
 import com.audition.model.AuditionPostComments;
 import com.audition.model.Comment;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-
+@ExtendWith(MockitoExtension.class)
 public class AuditionIntegrationClientTest {
 
     @Mock
@@ -35,16 +40,31 @@ public class AuditionIntegrationClientTest {
     @InjectMocks
     private AuditionIntegrationClient auditionIntegrationClient;
 
+    public String mockAuditionAPIUrl;
+
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.initMocks(this);
+
+        // Get the field representing the auditionAPIUrl property
+        Field field = AuditionIntegrationClient.class.getDeclaredField("auditionAPIUrl");
+        field.setAccessible(true);
+
+        // Set a mock value for the auditionAPIUrl property
+        mockAuditionAPIUrl = "https://jsonplaceholder.typicode.com";
+        field.set(auditionIntegrationClient, mockAuditionAPIUrl);
     }
+
 
     @Test
     public void shouldReturnEmptyListWhenNoPostsInAuditionAPI() {
 
-        when(restTemplate.getForObject(Mockito.any(String.class), any(Class.class))).thenThrow(
-            new HttpClientErrorException(HttpStatus.NOT_FOUND));
+        when(restTemplate.exchange(
+            eq(mockAuditionAPIUrl + "/posts"),
+            eq(HttpMethod.GET),
+            any(),
+            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
+            .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
         SystemException exception = assertThrows(SystemException.class, () -> auditionIntegrationClient.getPosts());
 
@@ -52,10 +72,17 @@ public class AuditionIntegrationClientTest {
         assertEquals(404, exception.getStatusCode(), 404);
     }
 
+
     @Test
     public void shouldThrowInternalServerErrorWhenAuditionAPIIsUnavailable() {
-        when(restTemplate.getForObject(Mockito.any(String.class), any(Class.class))).thenThrow(
-            new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+        // Fix when to cater for exchange method
+
+        when(restTemplate.exchange(
+            eq(mockAuditionAPIUrl + "/posts"),
+            eq(HttpMethod.GET),
+            any(),
+            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
+            .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
 
         SystemException exception = assertThrows(SystemException.class, () -> auditionIntegrationClient.getPosts());
 
@@ -67,8 +94,12 @@ public class AuditionIntegrationClientTest {
 
     @Test
     public void shouldThrowServiceUnavailableWhenAuditionAPIIsUnavailable() {
-        when(restTemplate.getForObject(Mockito.any(String.class), any(Class.class))).thenThrow(
-            new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE));
+        when(restTemplate.exchange(
+            eq(mockAuditionAPIUrl + "/posts"),
+            eq(HttpMethod.GET),
+            any(),
+            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
+            .thenThrow(new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE));
 
         SystemException exception = assertThrows(SystemException.class, () -> auditionIntegrationClient.getPosts());
 
@@ -165,5 +196,6 @@ public class AuditionIntegrationClientTest {
         // Then
         assertEquals(3, comments.size());
     }
+
 
 }

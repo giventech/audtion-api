@@ -7,9 +7,9 @@ import java.util.stream.Collectors;
 public class AuditionUtils {
 
     /**
-     * This function filters a list of {@link AuditionPost} objects based on the provided filter string. The filter
-     * checks if the title or body of each post contains the given filter string. The function returns a new list
-     * containing only the posts that satisfy the filter condition.
+     * filters a list of {@link AuditionPost} objects based on the provided filter string. The filter checks if the
+     * title or body of each post contains the given filter string. The function returns a new list containing only the
+     * posts that satisfy the filter condition.
      *
      * @param posts  The list of {@link AuditionPost} objects to be filtered.
      * @param filter The filter string to be used for filtering the posts.
