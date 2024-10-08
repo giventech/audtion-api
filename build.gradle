@@ -41,12 +41,24 @@ dependencies {
 
     // TODO Clean up unused dependencies. Add comments on consideration on any improvements you made.
     implementation "org.springframework.boot:spring-boot-starter-actuator"
-    implementation "org.springframework.boot:spring-boot-starter-data-jpa"
     implementation "org.springframework.boot:spring-boot-starter-web"
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation "org.springframework.boot:spring-boot-starter-security"
+    implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation "org.springframework.cloud:spring-cloud-starter-config"
     implementation "org.springframework.boot:spring-boot-starter-webflux"
     implementation "org.springframework.boot:spring-boot-starter-aop"
+    // OpenTelemetry dependencies
+    implementation "io.opentelemetry:opentelemetry-api"
+    implementation "io.opentelemetry:opentelemetry-sdk"
+    implementation "io.opentelemetry:opentelemetry-api:1.20.0"
+    implementation "io.opentelemetry:opentelemetry-api:1.20.0" // Use the latest version
+    implementation 'io.opentelemetry:opentelemetry-exporter-logging:1.20.0'
+    implementation 'io.opentelemetry:opentelemetry-exporter-jaeger:1.20.0'
+
+    // Optional: Add context propagation if needed
+    implementation "io.opentelemetry:opentelemetry-context"
+
+
     implementation "io.micrometer:micrometer-tracing-bridge-brave"
     implementation "io.micrometer:micrometer-tracing"
     implementation "io.micrometer:micrometer-registry-prometheus"
