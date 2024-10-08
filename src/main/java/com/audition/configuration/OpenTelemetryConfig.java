@@ -4,6 +4,7 @@
 //import io.opentelemetry.api.trace.Tracer;
 //import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 //import io.opentelemetry.sdk.OpenTelemetrySdk;
+//import io.opentelemetry.sdk.OpenTelemetrySdkBuilder;
 //import io.opentelemetry.sdk.trace.SdkTracerProvider;
 //import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 //import org.springframework.context.annotation.Bean;
@@ -14,16 +15,21 @@
 //
 //    @Bean
 //    public Tracer openTelemetryTracer() {
-//        // Use LoggingSpanExporter for console output
+//        // Create a LoggingSpanExporter to log spans to the console
 //        LoggingSpanExporter exporter = LoggingSpanExporter.create();
+//
+//        // Build and configure the SdkTracerProvider
 //        SdkTracerProvider tracerProvider = SdkTracerProvider.builder()
 //            .addSpanProcessor(SimpleSpanProcessor.create(exporter))
 //            .build();
 //
-//        OpenTelemetrySdk.builder()
-//            .setTracerProvider(tracerProvider)
-//            .buildAndRegisterGlobal();
+//        // Use OpenTelemetrySdkBuilder.buildAndRegisterGlobal
+//        OpenTelemetrySdkBuilder sdkBuilder = OpenTelemetrySdk.builder()
+//            .setTracerProvider(tracerProvider);
 //
-//        return GlobalOpenTelemetry.getTracer("your.tracer.name");
+//        OpenTelemetrySdk sdk = sdkBuilder.buildAndRegisterGlobal();
+//
+//        // Return the Tracer from the globally registered OpenTelemetry instance
+//        return GlobalOpenTelemetry.getTracer("com.audition.tracer");
 //    }
 //}

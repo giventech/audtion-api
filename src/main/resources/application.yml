@@ -34,12 +34,12 @@ logging:
 audition:
   api:
     url: "https://jsonplaceholder.typicode.com"
-  # OpenTelemetry Configuration
-otel:
-  service:
-    name: "audition-api"
-  traces:
-    exporter:
-      jaeger:
-        endpoint: "http://localhost:14250"
-        enabled: true
+#  # OpenTelemetry Configuration
+#otel:
+#  service:
+#    name: "audition-api"
+#  traces:
+#    exporter:
+#      jaeger:
+#        endpoint: "http://localhost:14250"
+#        enabled: true

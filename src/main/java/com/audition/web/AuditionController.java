@@ -67,6 +67,7 @@ public class AuditionController {
     // TODO Add additional methods to return comments for each post. Hint: Check https://jsonplaceholder.typicode.com/
 
     @Validated
+    @Operation(summary = "Get a post and all its given comments")
     @RequestMapping(value = "/posts/{id}/comments", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     public @ResponseBody AuditionPostComments getCommentsForPost(
         @Valid
