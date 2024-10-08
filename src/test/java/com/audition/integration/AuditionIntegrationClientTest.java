@@ -136,7 +136,7 @@ public class AuditionIntegrationClientTest {
 
         when(restTemplate.getForObject(anyString(), eq(AuditionPost.class))).thenReturn(mockPost);
         when(restTemplate.getForObject(anyString(), eq(List.class))).thenReturn(mockComments);
-        
+
         // When
         PostComment result = auditionIntegrationClient.getPostWithComments(postId);
 
@@ -148,6 +148,22 @@ public class AuditionIntegrationClientTest {
         assertEquals("This is a test post body", result.getPost().getBody());
         assertEquals(mockComment.getId(), result.getComments().get(0).getId());
         assertEquals(mockComments, result.getComments());
+    }
+
+
+    @Test
+    public void shouldReturnANumberOfComments() {
+        // Given
+        List<Comment> mockComments;
+        mockComments = Arrays.asList(new Comment(), new Comment(), new Comment());
+
+        when(restTemplate.getForObject(anyString(), eq(List.class))).thenReturn(mockComments);
+
+        // When
+        List<Comment> comments = auditionIntegrationClient.getCommentsByPostId(1);
+
+        // Then
+        assertEquals(3, comments.size());
     }
 
 }
