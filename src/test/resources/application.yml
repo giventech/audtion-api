@@ -10,6 +10,6 @@ application:
     write-timeout: 5000
     connect-timeout: 5000
     response-timeout: 5000
-openweathermap:
+audition:
   api:
     url: "https://jsonplaceholder.typicode.com/posts"
