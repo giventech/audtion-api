@@ -29,6 +29,7 @@ public class WebServiceConfiguration implements WebMvcConfigurer {
         ObjectMapper objectMapper = new ObjectMapper();
 
         //  1. allows for date format as yyyy-MM-dd
+        // NOPMD - SimpleDateFormat is thread-unsafe, but this usage is acceptable here
         objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
 
         //  2. Does not fail on unknown properties

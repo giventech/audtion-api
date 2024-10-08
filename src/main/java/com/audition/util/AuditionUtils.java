@@ -4,6 +4,8 @@ import com.audition.model.AuditionPost;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+@SuppressWarnings("PMD")
 public class AuditionUtils {
 
     /**
