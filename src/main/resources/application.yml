@@ -28,4 +28,4 @@ logging:
     level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
 audition:
   api:
-    url: "https://jsonplaceholder.typicode.com/posts"
+    url: "https://jsonplaceholder.typicode.com"

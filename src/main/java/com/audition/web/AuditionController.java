@@ -1,37 +1,62 @@
 package com.audition.web;
 
 import com.audition.model.AuditionPost;
+import com.audition.model.AuditionPostComments;
 import com.audition.service.AuditionService;
+import com.audition.util.AuditionUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Validated
 public class AuditionController {
 
     @Autowired
     AuditionService auditionService;
 
     // TODO Add a query param that allows data filtering. The intent of the filter is at developers discretion.
+    @Validated
+    @Operation(summary = " Retrieves all posts or the  posts that match the filter")
     @RequestMapping(value = "/posts", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody List<AuditionPost> getPosts() {
+    public @ResponseBody List<AuditionPost> getPosts(@RequestParam(value = "filter", required = false) String filter) {
 
-        // TODO Add logic that filters response data based on the query param
-        // For example, filter by author, date range, etc.
-        // return auditionService.getFilteredPosts(filterCriteria);
+        // Get all posts from the service
+        List<AuditionPost> posts = auditionService.getPosts();
 
-        // If no filtering is required, simply return all posts
+        // If a filter query parameter is provided, apply filtering logic
 
-        return auditionService.getPosts();
+        if (filter != null && !filter.isEmpty()) {
+            posts = AuditionUtils.getPostByIdAndTitleFilter(posts, filter);
+        }
+
+        // If no filter is provided, return all posts
+        return posts;
     }
 
+
+    @Validated
+    @Operation(summary = "Get all posts for a given post id")
     @RequestMapping(value = "/posts/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody AuditionPost getPosts(@PathVariable("id") final String postId) {
+    public @ResponseBody AuditionPost getPostsById(
+        @Valid
+        @NotEmpty(message = "Post id must not be empty")
+        @Positive(message = "Post id must be positive integer")
+        @Parameter(description = "ID of the post to retrieve", required = true)
+        @PathVariable("id") final String postId) {
+
         final AuditionPost auditionPosts = auditionService.getPostById(postId);
 
         // TODO Add input validation
@@ -41,4 +66,20 @@ public class AuditionController {
 
     // TODO Add additional methods to return comments for each post. Hint: Check https://jsonplaceholder.typicode.com/
 
+    @Validated
+    @RequestMapping(value = "/posts/{id}/comments", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    public @ResponseBody AuditionPostComments getCommentsForPost(
+        @Valid
+        @NotEmpty(message = "Post id must not be empty")
+        @Positive(message = "Post id must be positive integer")
+        @PathVariable("id") final String postId) {
+
+        return auditionService.getPostAndComments(postId);
+
+
+    }
+
+
 }
+
+

@@ -12,4 +12,4 @@ application:
     response-timeout: 5000
 audition:
   api:
-    url: "https://jsonplaceholder.typicode.com/posts"
+    url: "https://jsonplaceholder.typicode.com"

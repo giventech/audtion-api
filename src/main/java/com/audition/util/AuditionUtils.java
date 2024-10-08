@@ -15,7 +15,7 @@ public class AuditionUtils {
      * @param filter The filter string to be used for filtering the posts.
      * @return A new list of {@link AuditionPost} objects that satisfy the filter condition.
      */
-    public static List<AuditionPost> getPostByIdAndTitleFilter(final List<AuditionPost> posts, final String filter) {
+    public static List<AuditionPost> getPostByIdAndTitleFilter(List<AuditionPost> posts, String filter) {
         String caseInsensitiveFilter = filter.toLowerCase();
         return posts.stream()
             .filter(

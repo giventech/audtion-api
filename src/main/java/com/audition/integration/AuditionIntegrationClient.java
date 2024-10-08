@@ -2,11 +2,13 @@ package com.audition.integration;
 
 import com.audition.common.exception.SystemException;
 import com.audition.model.AuditionPost;
+import com.audition.model.AuditionPostComments;
 import com.audition.model.Comment;
-import com.audition.model.PostComment;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -27,7 +29,17 @@ public class AuditionIntegrationClient {
     public List<AuditionPost> getPosts() {
         // TODO make RestTemplate call to get Posts from https://jsonplaceholder.typicode.com/posts
         try {
-            return restTemplate.getForObject(auditionAPIUrl + "/posts", List.class);
+
+            RestTemplate restTemplate = new RestTemplate();
+            List<AuditionPost> posts = restTemplate.exchange(
+                auditionAPIUrl + "/posts",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<AuditionPost>>() {
+                }
+            ).getBody();
+
+            return posts;
         } catch (RestClientException e) { // 4XX exceptions
             throw curatedServerException(e);
         }
@@ -63,7 +75,7 @@ public class AuditionIntegrationClient {
 
     // TODO Write a method GET comments for a post from https://jsonplaceholder.typicode.com/posts/{postId}/comments - the comments must be returned as part of the post.
 
-    public PostComment getPostWithComments(int postId) {
+    public AuditionPostComments getPostWithComments(String postId) {
         try {
             // Fetch the post
             AuditionPost post = getPostById(String.valueOf(postId));
@@ -74,7 +86,7 @@ public class AuditionIntegrationClient {
                 List.class);
 
             // Create a PostComment object to combine post and comments
-            PostComment postComment = new PostComment();
+            AuditionPostComments postComment = new AuditionPostComments();
             postComment.setPost(post);
             postComment.setComments(comments);
 

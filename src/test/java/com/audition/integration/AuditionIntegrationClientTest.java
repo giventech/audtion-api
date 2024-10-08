@@ -11,8 +11,8 @@ import static org.mockito.Mockito.when;
 
 import com.audition.common.exception.SystemException;
 import com.audition.model.AuditionPost;
+import com.audition.model.AuditionPostComments;
 import com.audition.model.Comment;
-import com.audition.model.PostComment;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -79,7 +79,7 @@ public class AuditionIntegrationClientTest {
 
 
     @Test
-    public void testGetPosts_shouldReturnAllPosts() {
+    public void shouldReturnAllPosts() {
         // Given
         AuditionIntegrationClient client = Mockito.mock(AuditionIntegrationClient.class);
         List<AuditionPost> expectedPosts = Arrays.asList(new AuditionPost(), new AuditionPost());
@@ -115,7 +115,7 @@ public class AuditionIntegrationClientTest {
 
 
     @Test
-    public void testGetPostWithComments() {
+    public void shouldReturnAPostWithItsComments() {
         // Given
         int postId = 1;
         AuditionPost mockPost = new AuditionPost();
@@ -138,7 +138,7 @@ public class AuditionIntegrationClientTest {
         when(restTemplate.getForObject(anyString(), eq(List.class))).thenReturn(mockComments);
 
         // When
-        PostComment result = auditionIntegrationClient.getPostWithComments(postId);
+        AuditionPostComments result = auditionIntegrationClient.getPostWithComments(String.valueOf(postId));
 
         // Then
         assertNotNull(result);
