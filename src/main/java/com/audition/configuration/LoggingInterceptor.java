@@ -29,14 +29,26 @@ public class LoggingInterceptor implements ClientHttpRequestInterceptor {
 
         response.getBody().close();  // to make sure the response is fully consumed by the caller
 
-        // log the response body here, for example:
-        ObjectMapper objectMapper = new ObjectMapper();
-        Object responseBody = objectMapper.readValue(response.getBody(), Object.class);
-
         // Log the response body in debug mode to avoid performance issues in production.
         // Responses are buffered in WebServiceConfiguration using BufferingClientHttpRequestFactory.
-        logger.debug("Response body: {}",
-            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseBody));
+
+        // Only log the response body if it's JSON
+        String contentType =
+            response.getHeaders().getContentType() != null ? response.getHeaders().getContentType().toString() : "";
+
+        if (contentType.contains("application/json")) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                Object responseBody = objectMapper.readValue(response.getBody(), Object.class);
+                logger.info("Response body: {}",
+                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseBody));
+            } catch (Exception e) {
+                logger.error("Error parsing response body as JSON", e);
+            }
+        } else {
+            logger.info("Response body is not JSON, skipping parsing.");
+        }
+
         return response;
 
 

@@ -78,7 +78,7 @@ public class AuditionIntegrationClient {
 
             // Fetch the comments for the post
             List<Comment> comments = restTemplate.getForObject(
-                auditionAPIUrl + postId + "/comments",
+                auditionAPIUrl + "/posts/" + postId + "/comments",
                 List.class);
 
             // Create a PostComment object to combine post and comments
