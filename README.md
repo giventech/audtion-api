@@ -97,7 +97,10 @@ gradlew.bat bootRun
 
 ### Contracts
 
-Please navigate to the OpenAPI definition for the endpoinpts.  
+Please navigate to the OpenAPI definition for the endpoinpts.
+Documentation and manual testing of End points are available through the swagger documentation below:
+[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+
 These contracts are validated with a number of Junit tests
 
 ![img_1.png](img_1.png)
@@ -105,8 +108,11 @@ These contracts are validated with a number of Junit tests
 ### Code coverage
 
 Application was refactored to include code coverage checks
+Below command runs the jacoco test coverage protocols and create reports
 
-[http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+```bash
+gradlew clean test jacocoTestReport
+```
 
 ![img.png](img.png)
 
@@ -124,17 +130,25 @@ One approach in the integration test improvements is to leverage 'Wiremock' serv
 to further validate the application contracts
 
 ```java
+@SpringBootTest
+```
+
+### Production readiness
+
+Production readiness include aspect of Site Reliability Engineering, releasing and deployment
+
+```java
 @ActiveProfiles
 ```
 
-```java
-@SpringBootTest
-```
+## Improvements Backlog
 
 ### Optimisation & Performance
 
 Below code perform two subsequent RestAPI calls. Although current data set is small,
 A better performance improvement would be to treat both requests as non blocking.
+It utilises the Flux and reactor libraries, reactive programming performance improvements
+and hence the ability to created non blocking requests to thirds parti services
 
 ```java
 AuditionPost post = getPostById(String.valueOf(postId));
@@ -145,9 +159,8 @@ List comments = restTemplate.getForObject(
     List.class);
 ```
 
-Non blocking request handling can be performed using WebClient.
-
-Required changes would include the following
+Non blocking request handling can be performed using WebClient. See below a better approach to calling two independent
+api and combining the results
 
 ```java
  public Mono<AuditionPostComments> getPostWithComments(String postId) {
@@ -175,7 +188,7 @@ As the API has external endpoint dependencies. Circuit Breaker and Retry mechani
 will provide service the ability to recover from outage of downstream services.
 Resilience4j will be used.
 
-### DevOps and Team Agility / Release cycles
+### DevOps and Team Agility
 
 CI/CD pipeline on Cloud provider will support incremental delivery of audition-api.
 Feedback to the Agile team can arrive early, enhancing both delivery velocity and quality by keeping tests active and
@@ -244,3 +257,29 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 ```
+
+### SRE touch points
+
+#### Alter
+
+Based on logs formats and exception handling alerts will be triggered to Service Product owners
+Alerting will include Sevice Name, Time of events and Error messages and codes
+
+#### Tracing
+
+Span Id and Trace Id are provided here to ensure traceability in the context of decoupled architecture
+Microservices
+
+#### Monitoring
+
+Metrics and monitory are done using collectors following the OpenTelemetry specification.
+This application uses basic Logging Exporter for validation purposes.
+This can be configured to changed to Cloudtrace exporters
+
+We use authomatic instrumentation telemetry to infer the least code changes.
+
+https://cloud.google.com/trace/docs/setup/java-ot#config-agent
+
+
+
+
