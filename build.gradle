@@ -16,6 +16,14 @@ version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
 targetCompatibility = '17'
 
+// Add the following lines to include the OpenTelemetry Java agent
+bootRun {
+    jvmArgs = [
+            '-Dotel.javaagent.enabled=true',
+            '-javaagent:lib/opentelemetry-javaagent.jar'
+    ]
+}
+
 
 // TODO allow for code-analysis.gradle to be applied for code analysis.
 // apply from: 'config/code-analysis.gradle'
@@ -54,6 +62,8 @@ dependencies {
     implementation "io.opentelemetry:opentelemetry-api:1.20.0" // Use the latest version
     implementation 'io.opentelemetry:opentelemetry-exporter-logging:1.20.0'
     implementation 'io.opentelemetry:opentelemetry-exporter-jaeger:1.20.0'
+//    implementation 'io.opentelemetry:opentelemetry-extension-annotations:1.19.0'
+//    implementation 'io.opentelemetry:opentelemetry-instrumentation-spring-webmvc:1.19.0'
 
     // Optional: Add context propagation if needed
     implementation "io.opentelemetry:opentelemetry-context"

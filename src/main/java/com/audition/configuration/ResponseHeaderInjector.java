@@ -1,41 +1,39 @@
 package com.audition.configuration;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Context;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerInterceptor;
+
 
 @Component
-// TODO Inject openTelemetry trace and span Ids in the response headers.
-
-public class ResponseHeaderInjector extends OncePerRequestFilter {
+public class ResponseHeaderInjector implements HandlerInterceptor {
 
     private final Tracer tracer;
 
-    public ResponseHeaderInjector() {
-        // Initialize the Tracer
-        this.tracer = GlobalOpenTelemetry.getTracer("your.tracer.name"); // Replace with your tracer name
+    // Constructor-based dependency injection for the OpenTelemetry tracer
+    public ResponseHeaderInjector(Tracer tracer) {
+        this.tracer = tracer;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-        throws ServletException, IOException {
-        Span span = Span.fromContext(Context.current());
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
+        throws Exception {
+        // Get the current span
+        Span currentSpan = Span.current();
 
-        // Inject trace and span IDs into response headers
-        response.addHeader("X-Trace-Id", span.getSpanContext().getTraceId());
-        response.addHeader("X-Span-Id", span.getSpanContext().getSpanId());
+        if (currentSpan != null) {
+            // Extract the span context
+            SpanContext spanContext = currentSpan.getSpanContext();
 
-        // Continue with the filter chain
-        filterChain.doFilter(request, response);
+            if (spanContext.isValid()) {
+                // Inject trace and span IDs into the response headers
+                response.setHeader("X-Trace-Id", spanContext.getTraceId());
+                response.setHeader("X-Span-Id", spanContext.getSpanId());
+            }
+        }
     }
-
-
 }
