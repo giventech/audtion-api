@@ -133,7 +133,7 @@ to further validate the application contracts
 @SpringBootTest
 ```
 
-### Production readiness
+## Production readiness
 
 Production readiness include aspect of Site Reliability Engineering, releasing and deployment
 
@@ -141,9 +141,9 @@ Production readiness include aspect of Site Reliability Engineering, releasing a
 @ActiveProfiles
 ```
 
-## Improvements Backlog
+### IMPROVEMENT BACKLOG
 
-### Optimisation & Performance
+#### Optimisation & Performance
 
 Below code perform two subsequent RestAPI calls. Although current data set is small,
 A better performance improvement would be to treat both requests as non blocking.
@@ -182,13 +182,13 @@ api and combining the results
 }
 ```
 
-### Resiliency
+#### Resiliency
 
 As the API has external endpoint dependencies. Circuit Breaker and Retry mechanisms
 will provide service the ability to recover from outage of downstream services.
 Resilience4j will be used.
 
-### DevOps and Team Agility
+#### DevOps and Team Agility
 
 CI/CD pipeline on Cloud provider will support incremental delivery of audition-api.
 Feedback to the Agile team can arrive early, enhancing both delivery velocity and quality by keeping tests active and
@@ -258,19 +258,19 @@ options:
 
 ```
 
-### SRE touch points
+#### SRE touch points
 
-#### Alter
+##### Alter
 
 Based on logs formats and exception handling alerts will be triggered to Service Product owners
 Alerting will include Sevice Name, Time of events and Error messages and codes
 
-#### Tracing
+##### Tracing
 
 Span Id and Trace Id are provided here to ensure traceability in the context of decoupled architecture
 Microservices
 
-#### Monitoring
+##### Monitoring
 
 Metrics and monitory are done using collectors following the OpenTelemetry specification.
 This application uses basic Logging Exporter for validation purposes.
