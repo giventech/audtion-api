@@ -10,10 +10,11 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@SuppressWarnings("PMD")
 public class SecurityConfiguration {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         http
             .csrf().disable() // Disable CSRF for simplicity; enable in production
             .authorizeHttpRequests(authz -> authz

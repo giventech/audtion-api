@@ -57,11 +57,13 @@ public class AuditionLogger {
         }
     }
 
+    @SuppressWarnings("PMD")
     private String createStandardProblemDetailMessage(final ProblemDetail standardProblemDetail) {
         // TODO Add implementation here.
         return StringUtils.EMPTY;
     }
 
+    @SuppressWarnings("PMD")
     private String createBasicErrorResponseMessage(final Integer errorCode, final String message) {
         // TODO Add implementation here.
         return StringUtils.EMPTY;

@@ -34,7 +34,6 @@ public class AuditionIntegrationClient {
     private String auditionAPIUrl;
 
     public List<AuditionPost> getPosts() {
-        // TODO make RestTemplate call to get Posts from https://jsonplaceholder.typicode.com/posts
         try {
             log.info(AuditionConstants.FETCHING_ALL_POSTS);
             return restTemplate.exchange(
@@ -44,75 +43,55 @@ public class AuditionIntegrationClient {
                 new ParameterizedTypeReference<List<AuditionPost>>() {
                 }
             ).getBody();
-        } catch (RestClientException e) { // 4XX exceptions
+        } catch (RestClientException e) {
             log.error(AuditionConstants.ERROR_RETRIEVING_ALL_POST);
             throw curatedServerException(e);
         }
-
     }
 
-
     public AuditionPost getPostById(final String id) {
-        // TODO get post by post ID call from https://jsonplaceholder.typicode.com/posts/
         try {
-
             log.info("Fetching post with ID: {}", id);
-            // Fetch the post by ID
-            AuditionPost post = restTemplate.getForObject(
+            final AuditionPost post = restTemplate.getForObject(
                 auditionAPIUrl + "/posts/" + id,
                 AuditionPost.class);
-            // Return an empty post
             return Objects.requireNonNullElseGet(post, AuditionPost::new);
         } catch (final HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 log.error(AuditionConstants.POST_ID, id, AuditionConstants.NO_RECORD_FOUND);
-                throw new SystemException(AuditionConstants.NO_RECORD_FOUND + id, "Resource Not Found",
-                    404);
+                throw new SystemException(AuditionConstants.NO_RECORD_FOUND + id, "Resource Not Found", 404,
+                    e); // Preserve stack trace
             } else {
-                // TODO Find a better way to handle the exception so that the original error message is not lost. Feel free to change this function.
-                // Error message is collected prior to raising the exception
                 log.error(AuditionConstants.POST_ID, e.getMessage(), e);
-                String errorMessage = e.getResponseBodyAsString(); // Extract the original error message
+                final String errorMessage = e.getResponseBodyAsString();
                 throw new SystemException(AuditionConstants.ERROR_RETRIEVING_POST + errorMessage,
-                    e.getStatusCode().toString(),
-                    e.getStatusCode().value());
+                    e.getStatusCode().toString(), e.getStatusCode().value(), e); // Preserve stack trace
             }
         }
     }
 
-    // TODO Write a method GET comments for a post from https://jsonplaceholder.typicode.com/posts/{postId}/comments - the comments must be returned as part of the post.
-
-    public AuditionPostComments getPostWithComments(String postId) {
+    public AuditionPostComments getPostWithComments(final String postId) {
         try {
-
             log.info(AuditionConstants.FETCHING_POST_AND_COMMENTS_FOR_POST_ID, postId);
-            // Fetch the post
-            AuditionPost post = getPostById(String.valueOf(postId));
+            final AuditionPost post = getPostById(postId);
             log.debug(AuditionConstants.POST_FETCHED_SUCCESSFULLY, post);
 
-            // Fetch the comments for the post
-            List comments = restTemplate.getForObject(
+            final List<Comment> comments = restTemplate.getForObject(
                 auditionAPIUrl + "/posts/" + postId + "/comments",
                 List.class);
             log.debug(AuditionConstants.FETCHED_SUCCESSFULLY_FOR_POST_ID, postId);
-            // Create a PostComment object to combine post and comments
-            AuditionPostComments postComment = new AuditionPostComments();
+            final AuditionPostComments postComment = new AuditionPostComments();
             postComment.setPost(post);
             postComment.setComments(comments);
             log.info(RETURNING_POST_WITH_COMMENTS_FOR_ID, postId);
-
             return postComment;
-        } catch (RestClientException e) { // 4XX exceptions
+        } catch (RestClientException e) {
             log.error(AuditionConstants.ERROR_FETCHING_POST_OR_COMMENTS_FOR_POST_ID, postId, e);
             throw curatedServerException(e);
         }
     }
 
-    // TODO write a method. GET comments for a particular Post from https://jsonplaceholder.typicode.com/comments?postId={postId}.
-    // The comments are a separate list that needs to be returned to the API consumers. Hint: this is not part of the AuditionPost pojo.
-
-    public List<Comment> getCommentsByPostId(int postId) {
-        // Fetch the comments for the post
+    public List<Comment> getCommentsByPostId(final int postId) {
         try {
             log.info(AuditionConstants.FETCHING_COMMENTS_FOR_POST_ID, postId);
             return restTemplate.getForObject(
@@ -124,31 +103,18 @@ public class AuditionIntegrationClient {
         }
     }
 
-
-    public static SystemException curatedServerException(RestClientException e) {
-        if (e instanceof HttpClientErrorException) {
-            HttpClientErrorException clientError = (HttpClientErrorException) e;
+    public static SystemException curatedServerException(final RestClientException e) {
+        if (e instanceof HttpClientErrorException clientError) {
             return new SystemException(
                 "Client error occurred (status " + clientError.getStatusCode() + "): " + clientError.getMessage(),
-                clientError.getStatusCode().value(),
-                clientError
-            );
+                clientError.getStatusCode().value(), clientError); // Preserve stack trace
         } else if (e instanceof HttpServerErrorException serverError) {
             return new SystemException(
                 "Server error occurred (status " + serverError.getStatusCode() + "): " + serverError.getMessage(),
-                serverError.getStatusCode().value(),
-                serverError
-            );
+                serverError.getStatusCode().value(), serverError); // Preserve stack trace
         } else {
             return new SystemException(
-                "An error occurred: " + e.getMessage(),
-                500,  // Defaulting to a general server error status code
-                e
-            );
+                "An error occurred: " + e.getMessage(), 500, e); // Preserve stack trace
         }
     }
-
 }
-
-
-

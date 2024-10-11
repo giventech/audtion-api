@@ -17,41 +17,46 @@ public class LoggingInterceptor implements ClientHttpRequestInterceptor {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
+    public ClientHttpResponse intercept(final HttpRequest request, final byte[] body,
+        final ClientHttpRequestExecution execution)
         throws IOException {
         logRequest(request, body);
-        ClientHttpResponse response = execution.execute(request, body);
+        final ClientHttpResponse response = execution.execute(request, body);
         logResponse(response);
         return response;
     }
 
-    private void logRequest(HttpRequest request, byte[] body) {
+    private void logRequest(final HttpRequest request, final byte[] body) {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Request method: {}, URI: {}, headers: {}, body: {}",
                 request.getMethod(), request.getURI(), request.getHeaders(), new String(body));
         }
     }
 
-    private void logResponse(ClientHttpResponse response) throws IOException {
+    private void logResponse(final ClientHttpResponse response) throws IOException {
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Response status code: {}, headers: {}", response.getStatusCode(), response.getHeaders());
             logResponseBody(response);
         }
     }
 
-    private void logResponseBody(ClientHttpResponse response) throws IOException {
-        String contentType = response.getHeaders().getContentType() != null ?
+    private void logResponseBody(final ClientHttpResponse response) throws IOException {
+        final String contentType = response.getHeaders().getContentType() != null ?
             response.getHeaders().getContentType().toString() : "";
 
         if (contentType.contains("application/json")) {
             try {
-                LOGGER.info("Response body: {}", objectMapper.writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(objectMapper.readValue(response.getBody(), Object.class)));
-            } catch (Exception e) {
+                if (LOGGER.isInfoEnabled()) { // Guard log statement
+                    LOGGER.info("Response body: {}", objectMapper.writerWithDefaultPrettyPrinter()
+                        .writeValueAsString(objectMapper.readValue(response.getBody(), Object.class)));
+                }
+            } catch (IOException e) { // Catch specific exception
                 LOGGER.error("Error parsing response body as JSON", e);
             }
         } else {
-            LOGGER.info("Response body is not JSON, skipping parsing.");
+            if (LOGGER.isInfoEnabled()) { // Guard log statement
+                LOGGER.info("Response body is not JSON, skipping parsing.");
+            }
         }
     }
 }

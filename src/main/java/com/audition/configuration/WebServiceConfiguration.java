@@ -23,7 +23,7 @@ public class WebServiceConfiguration implements WebMvcConfigurer {
 
     @Bean
     public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper()
+        return new ObjectMapper()
             .setDateFormat(new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH)) // Specify Locale
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false) // 2. Ignore unknown properties
             .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE) // 3. Camel case mapping
@@ -32,15 +32,15 @@ public class WebServiceConfiguration implements WebMvcConfigurer {
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false) // 5. Do not write dates as timestamps
             .registerModule(new JavaTimeModule()); // Register JavaTimeModule
 
-        return objectMapper; // Return configured ObjectMapper
     }
 
     @Bean
     public RestTemplate restTemplate() {
-        RestTemplate restTemplate = new RestTemplate(new BufferingClientHttpRequestFactory(createClientFactory()));
+        final RestTemplate restTemplate = new RestTemplate(
+            new BufferingClientHttpRequestFactory(createClientFactory()));
 
         // Configure message converter with ObjectMapper
-        MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();
+        final MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();
         messageConverter.setObjectMapper(objectMapper());
         restTemplate.getMessageConverters().add(messageConverter);
 
@@ -51,7 +51,7 @@ public class WebServiceConfiguration implements WebMvcConfigurer {
     }
 
     private SimpleClientHttpRequestFactory createClientFactory() {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        final SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setOutputStreaming(false);
         return requestFactory; // Return configured request factory
     }

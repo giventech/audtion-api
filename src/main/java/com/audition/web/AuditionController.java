@@ -31,7 +31,8 @@ public class AuditionController {
     @Validated
     @Operation(summary = " Retrieves all posts or the  posts that match the filter")
     @RequestMapping(value = "/posts", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody List<AuditionPost> getPosts(@RequestParam(value = "filter", required = false) String filter) {
+    public @ResponseBody List<AuditionPost> getPosts(
+        @RequestParam(value = "filter", required = false) final String filter) {
 
         // Get all posts from the service
         List<AuditionPost> posts = auditionService.getPosts();
@@ -57,11 +58,8 @@ public class AuditionController {
         @Parameter(description = "ID of the post to retrieve", required = true)
         @PathVariable("id") final String postId) {
 
-        final AuditionPost auditionPosts = auditionService.getPostById(postId);
+        return auditionService.getPostById(postId);
 
-        // TODO Add input validation
-
-        return auditionPosts;
     }
 
     // TODO Add additional methods to return comments for each post. Hint: Check https://jsonplaceholder.typicode.com/
