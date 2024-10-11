@@ -7,7 +7,7 @@ plugins {
     id "com.github.spotbugs" version "5.0.14"
     id "io.freefair.lombok" version "8.0.1"
     // TODO Enable checkstyle and PMD. Fix all the relevant issues.
-//    id "checkstyle"
+    id "checkstyle"
     id "pmd"
 }
 
