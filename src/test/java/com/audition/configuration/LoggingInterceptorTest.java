@@ -39,6 +39,7 @@ public class LoggingInterceptorTest {
         loggingInterceptor = new LoggingInterceptor();
     }
 
+
     @Test
     public void shouldLogRequestMethodUriHeadersAndBodyForGetRequest() throws IOException {
         // Given
