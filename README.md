@@ -88,6 +88,12 @@ can/should be documented.
 Applicants can choose to do this in a separate markdown file that needs to be included when the code is committed.
 
 ### Starting the application
+Create the wrapper 
+
+```bash
+gradle wrapper
+```
+
 
 Launch application with gradle from the root of the repository
 
