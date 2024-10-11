@@ -22,6 +22,7 @@ import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.mock.http.client.MockClientHttpResponse;
 
+@SuppressWarnings("PMD")
 public class LoggingInterceptorTest {
 
     @Mock

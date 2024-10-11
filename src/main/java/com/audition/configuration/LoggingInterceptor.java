@@ -13,44 +13,45 @@ import org.springframework.stereotype.Component;
 @Component
 public class LoggingInterceptor implements ClientHttpRequestInterceptor {
 
-    private static final Logger logger = LoggerFactory.getLogger(LoggingInterceptor.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggingInterceptor.class);
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
         throws IOException {
-        logger.info("Request method: {}, URI: {}", request.getMethod(), request.getURI());
-        logger.info("Request headers: {}", request.getHeaders());
-        logger.info("Request body: {}", new String(body));
-
+        logRequest(request, body);
         ClientHttpResponse response = execution.execute(request, body);
+        logResponse(response);
+        return response;
+    }
 
-        logger.info("Response status code: {}", response.getStatusCode());
-        logger.info("Response headers: {}", response.getHeaders());
+    private void logRequest(HttpRequest request, byte[] body) {
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Request method: {}, URI: {}, headers: {}, body: {}",
+                request.getMethod(), request.getURI(), request.getHeaders(), new String(body));
+        }
+    }
 
-        response.getBody().close();  // to make sure the response is fully consumed by the caller
+    private void logResponse(ClientHttpResponse response) throws IOException {
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Response status code: {}, headers: {}", response.getStatusCode(), response.getHeaders());
+            logResponseBody(response);
+        }
+    }
 
-        // Log the response body in debug mode to avoid performance issues in production.
-        // Responses are buffered in WebServiceConfiguration using BufferingClientHttpRequestFactory.
-
-        // Only log the response body if it's JSON
-        String contentType =
-            response.getHeaders().getContentType() != null ? response.getHeaders().getContentType().toString() : "";
+    private void logResponseBody(ClientHttpResponse response) throws IOException {
+        String contentType = response.getHeaders().getContentType() != null ?
+            response.getHeaders().getContentType().toString() : "";
 
         if (contentType.contains("application/json")) {
-            ObjectMapper objectMapper = new ObjectMapper();
             try {
-                Object responseBody = objectMapper.readValue(response.getBody(), Object.class);
-                logger.info("Response body: {}",
-                    objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(responseBody));
+                LOGGER.info("Response body: {}", objectMapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(objectMapper.readValue(response.getBody(), Object.class)));
             } catch (Exception e) {
-                logger.error("Error parsing response body as JSON", e);
+                LOGGER.error("Error parsing response body as JSON", e);
             }
         } else {
-            logger.info("Response body is not JSON, skipping parsing.");
+            LOGGER.info("Response body is not JSON, skipping parsing.");
         }
-
-        return response;
-
-
     }
 }

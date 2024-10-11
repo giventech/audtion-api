@@ -36,6 +36,7 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("PMD")
 public class AuditionIntegrationClientTest {
 
     @Mock

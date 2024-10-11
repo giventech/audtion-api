@@ -27,6 +27,7 @@ import org.springframework.web.client.HttpClientErrorException;
 
 @WebMvcTest(AuditionController.class)
 @Import(TestSecurityConfig.class)
+@SuppressWarnings("PMD")
 class AuditControllerTest {
 
 
