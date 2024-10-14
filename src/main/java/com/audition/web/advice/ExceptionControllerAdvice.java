@@ -3,12 +3,14 @@ package com.audition.web.advice;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.METHOD_NOT_ALLOWED;
 
+import com.audition.common.exception.BusinessException;
 import com.audition.common.exception.SystemException;
 import com.audition.common.logging.AuditionLogger;
 import io.micrometer.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -39,7 +41,7 @@ public class ExceptionControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     ProblemDetail handleMainException(final Exception e) {
         // TODO Add handling for Exception
-
+        LOG.error("An unexpected error occurred: {}", e.getMessage(), e);
         final HttpStatusCode status = getHttpStatusCodeFromException(e);
         return createProblemDetail(e, status);
 
@@ -48,9 +50,22 @@ public class ExceptionControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(SystemException.class)
     ProblemDetail handleSystemException(final SystemException e) {
         // TODO `Add Handling for SystemException
+        LOG.error("System exception occurred: {}", e.getMessage(), e);
         final HttpStatusCode status = getHttpStatusCodeFromSystemException(e);
         return createProblemDetail(e, status);
 
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ProblemDetail handleBusinessException(final BusinessException e) {
+        // Log the business-level error
+        LOG.error("Business exception occurred: {}", e.getMessage(), e);
+
+        // Business exceptions typically result in a 4xx error (client-side issue)
+        final HttpStatusCode status = HttpStatus.BAD_REQUEST;
+
+        // Create a ProblemDetail object with business error code and message
+        return createProblemDetail(e, status);
     }
 
 
