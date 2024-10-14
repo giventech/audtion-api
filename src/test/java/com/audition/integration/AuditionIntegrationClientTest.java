@@ -6,11 +6,14 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
+import com.audition.common.enumeration.BusinessErrorCode;
+import com.audition.common.exception.BusinessException;
 import com.audition.common.exception.SystemException;
 import com.audition.common.util.AuditionConstants;
 import com.audition.model.AuditionPost;
@@ -60,60 +63,6 @@ public class AuditionIntegrationClientTest {
         field.set(auditionIntegrationClient, mockAuditionAPIUrl);
     }
 
-
-    @Test
-    public void shouldReturnEmptyListWhenNoPostsInAuditionAPI() {
-
-        when(restTemplate.exchange(
-            eq(mockAuditionAPIUrl + "/posts"),
-            eq(HttpMethod.GET),
-            any(),
-            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
-            .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
-
-        SystemException exception = assertThrows(SystemException.class, () -> auditionIntegrationClient.getPosts());
-
-        assertEquals("Client error occurred (status 404 NOT_FOUND): 404 NOT_FOUND", exception.getMessage());
-        assertEquals(404, exception.getStatusCode(), 404);
-    }
-
-
-    @Test
-    public void shouldThrowInternalServerErrorWhenAuditionAPIIsUnavailable() {
-        // Fix when to cater for exchange method
-
-        when(restTemplate.exchange(
-            eq(mockAuditionAPIUrl + "/posts"),
-            eq(HttpMethod.GET),
-            any(),
-            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
-            .thenThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-
-        SystemException exception = assertThrows(SystemException.class, () -> auditionIntegrationClient.getPosts());
-
-        assertEquals("Client error occurred (status 500 INTERNAL_SERVER_ERROR): 500 INTERNAL_SERVER_ERROR",
-            exception.getMessage());
-        assertEquals(500, exception.getStatusCode(), 500);
-    }
-
-
-    @Test
-    public void shouldThrowServiceUnavailableWhenAuditionAPIIsUnavailable() {
-        when(restTemplate.exchange(
-            eq(mockAuditionAPIUrl + "/posts"),
-            eq(HttpMethod.GET),
-            any(),
-            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
-            .thenThrow(new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE));
-
-        SystemException exception = assertThrows(SystemException.class, () -> auditionIntegrationClient.getPosts());
-
-        assertEquals("Client error occurred (status 503 SERVICE_UNAVAILABLE): 503 SERVICE_UNAVAILABLE",
-            exception.getMessage());
-        assertEquals(503, exception.getStatusCode(), 503);
-    }
-
-
     @Test
     public void shouldReturnAllPosts() {
         // Given
@@ -126,62 +75,6 @@ public class AuditionIntegrationClientTest {
 
         // Then
         assertEquals(expectedPosts.size(), actualPosts.size());
-    }
-
-    @Test
-    void shouldReturnValidPostObjectWhenIdIsValidInteger() {
-        // Given
-        String postId = "1";
-        AuditionPost expectedPost = new AuditionPost();
-        expectedPost.setId(1);
-        expectedPost.setUserId(1);
-        expectedPost.setTitle("Title");
-        expectedPost.setBody("Body");
-        // When
-        when(restTemplate.getForObject(anyString(), eq(AuditionPost.class))).thenReturn(expectedPost);
-
-        // Then
-        AuditionPost actualPost = auditionIntegrationClient.getPostById(postId);
-        assertNotNull(actualPost);
-        assertEquals(expectedPost.getId(), actualPost.getId());
-        assertEquals(expectedPost.getUserId(), actualPost.getUserId());
-        assertEquals(expectedPost.getTitle(), actualPost.getTitle());
-        assertEquals(expectedPost.getBody(), actualPost.getBody());
-    }
-
-    @Test
-    void shouldRaiseSystemExceptionWhenPostNotFound() {
-        // Given
-        String postId = "1";
-        HttpClientErrorException notFoundException = new HttpClientErrorException(HttpStatus.NOT_FOUND);
-        when(restTemplate.getForObject(eq(mockAuditionAPIUrl + "/posts/" + postId), eq(AuditionPost.class)))
-            .thenThrow(notFoundException);
-
-        // When
-        Throwable thrown = catchThrowable(() -> auditionIntegrationClient.getPostById(postId));
-
-        // Then
-        assertThat(thrown).isInstanceOf(SystemException.class)
-            .hasMessage(AuditionConstants.NO_RECORD_FOUND + "1")
-            .hasFieldOrPropertyWithValue("title", "Resource Not Found")
-            .hasFieldOrPropertyWithValue("statusCode", 404);
-    }
-
-    @Test
-    void shouldRaiseAnInternalServerErrorWhenCallToPostsAPIFails() {
-        String postId = "1";
-        // Given
-        HttpClientErrorException restClientException = new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
-        when(restTemplate.getForObject(eq(mockAuditionAPIUrl + "/posts/" + postId), eq(AuditionPost.class)))
-            .thenThrow(restClientException);
-
-        // when
-        SystemException exception = assertThrows(SystemException.class,
-            () -> auditionIntegrationClient.getPostById(postId));
-
-        // Then
-        assertEquals(AuditionConstants.ERROR_RETRIEVING_POST, exception.getMessage());
-        assertEquals("500", String.valueOf(exception.getStatusCode()));
     }
 
 
@@ -235,6 +128,133 @@ public class AuditionIntegrationClientTest {
 
         // Then
         assertEquals(3, comments.size());
+    }
+
+
+    @Test
+    void shouldReturnValidPostObjectWhenIdIsValidInteger() {
+        // Given
+        String postId = "1";
+        AuditionPost expectedPost = new AuditionPost();
+        expectedPost.setId(1);
+        expectedPost.setUserId(1);
+        expectedPost.setTitle("Title");
+        expectedPost.setBody("Body");
+        // When
+        when(restTemplate.getForObject(anyString(), eq(AuditionPost.class))).thenReturn(expectedPost);
+
+        // Then
+        AuditionPost actualPost = auditionIntegrationClient.getPostById(postId);
+        assertNotNull(actualPost);
+        assertEquals(expectedPost.getId(), actualPost.getId());
+        assertEquals(expectedPost.getUserId(), actualPost.getUserId());
+        assertEquals(expectedPost.getTitle(), actualPost.getTitle());
+        assertEquals(expectedPost.getBody(), actualPost.getBody());
+    }
+
+    @Test
+    void shouldRaiseSystemExceptionWhenPostNotFound() {
+        // Given
+        String postId = "1";
+        HttpClientErrorException notFoundException = new HttpClientErrorException(HttpStatus.NOT_FOUND);
+        when(restTemplate.getForObject(eq(mockAuditionAPIUrl + "/posts/" + postId), eq(AuditionPost.class)))
+            .thenThrow(notFoundException);
+
+        // When
+        Throwable thrown = catchThrowable(() -> auditionIntegrationClient.getPostById(postId));
+
+        // Then
+        assertThat(thrown).isInstanceOf(BusinessException.class)
+            .hasMessage(AuditionConstants.NO_RECORD_FOUND)
+            .hasFieldOrPropertyWithValue("businessErrorCode", BusinessErrorCode.RESOURCE_NOT_FOUND.getCode());
+    }
+
+
+    @Test
+    void shouldRaiseAnoRecordFoundErrorWhenCallToPostsAPIReturnsNoResults() {
+        String postId = "1";
+        // Given
+        HttpClientErrorException restClientException = new HttpClientErrorException(HttpStatus.NOT_FOUND);
+        when(restTemplate.getForObject(eq(mockAuditionAPIUrl + "/posts/" + postId), eq(AuditionPost.class)))
+            .thenThrow(restClientException);
+
+        // when
+        BusinessException exception = assertThrows(BusinessException.class,
+            () -> auditionIntegrationClient.getPostById(postId));
+
+        // Then
+        exception.getMessage().startsWith(AuditionConstants.NO_RECORD_FOUND);
+        assertEquals(BusinessErrorCode.RESOURCE_NOT_FOUND.getCode(), String.valueOf(exception.getBusinessErrorCode()));
+    }
+
+
+    @Test
+    void shouldRaiseAnInternalServerErrorWhenCallToPostsAPIFails() {
+        String postId = "1";
+        // Given
+        HttpServerErrorException restClientException = new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR);
+        when(restTemplate.getForObject(eq(mockAuditionAPIUrl + "/posts/" + postId), eq(AuditionPost.class)))
+            .thenThrow(restClientException);
+
+        // when
+        SystemException exception = assertThrows(SystemException.class,
+            () -> auditionIntegrationClient.getPostById(postId));
+
+        // Then
+
+        assertTrue(exception.getMessage().startsWith(AuditionConstants.SERVER_ERROR_OCCURRED));
+        assertEquals("500", String.valueOf(exception.getStatusCode()));
+    }
+
+
+    @Test
+    public void shouldReturnEmptyListWhenNoPostsInAuditionAPI() {
+
+        when(restTemplate.exchange(
+            eq(mockAuditionAPIUrl + "/posts"),
+            eq(HttpMethod.GET),
+            any(),
+            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
+            .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> auditionIntegrationClient.getPosts());
+
+        assertTrue(
+            exception.getMessage().startsWith(AuditionConstants.NO_RECORD_FOUND));
+        assertEquals(BusinessErrorCode.RESOURCE_NOT_FOUND.getCode(), exception.getBusinessErrorCode());
+    }
+
+
+    @Test
+    public void shouldThrowInternalServerErrorWhenAuditionReturnAServerError() {
+        // Fix when to cater for exchange method
+
+        when(restTemplate.exchange(
+            eq(mockAuditionAPIUrl + "/posts"),
+            eq(HttpMethod.GET),
+            any(),
+            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
+            .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+
+        SystemException exception = assertThrows(SystemException.class, () -> auditionIntegrationClient.getPosts());
+        assertTrue(exception.getMessage().startsWith(AuditionConstants.SERVER_ERROR_OCCURRED));
+        assertEquals(500, exception.getStatusCode(), 500);
+    }
+
+
+    @Test
+    public void shouldThrowServiceUnavailableWhenAuditionAPIIsUnavailable() {
+        when(restTemplate.exchange(
+            eq(mockAuditionAPIUrl + "/posts"),
+            eq(HttpMethod.GET),
+            any(),
+            any(ParameterizedTypeReference.class))) // Add a matcher for the ParameterizedTypeReference
+            .thenThrow(new HttpClientErrorException(HttpStatus.SERVICE_UNAVAILABLE));
+
+        SystemException exception = assertThrows(SystemException.class, () -> auditionIntegrationClient.getPosts());
+
+        assertTrue(exception.getMessage().startsWith(AuditionConstants.CLIENT_ERROR_OCCURRED));
+        assertEquals(503, exception.getStatusCode(), 503);
     }
 
 

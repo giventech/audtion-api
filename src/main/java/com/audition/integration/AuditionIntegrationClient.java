@@ -2,6 +2,8 @@ package com.audition.integration;
 
 import static com.audition.common.util.AuditionConstants.RETURNING_POST_WITH_COMMENTS_FOR_ID;
 
+import com.audition.common.enumeration.BusinessErrorCode;
+import com.audition.common.exception.BusinessException;
 import com.audition.common.exception.SystemException;
 import com.audition.common.util.AuditionConstants;
 import com.audition.model.AuditionPost;
@@ -43,9 +45,21 @@ public class AuditionIntegrationClient {
                 new ParameterizedTypeReference<List<AuditionPost>>() {
                 }
             ).getBody();
+
+        } catch (final HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                log.error(AuditionConstants.POST_ID, AuditionConstants.NO_RECORD_FOUND);
+                // No retry 404 which retry is unlikely to succeed
+                throw new BusinessException(AuditionConstants.NO_RECORD_FOUND,
+                    BusinessErrorCode.RESOURCE_NOT_FOUND.getCode(), e);
+            } else {
+                log.error(AuditionConstants.POST_ID, e.getMessage(), e);
+                throw curatedServerException(e, e.getResponseBodyAsString(),
+                    null); // Convert to SystemException
+            }
         } catch (RestClientException e) {
             log.error(AuditionConstants.ERROR_RETRIEVING_ALL_POST);
-            throw curatedServerException(e);
+            throw curatedServerException(e, AuditionConstants.ERROR_RETRIEVING_ALL_POST, null);
         }
     }
 
@@ -59,14 +73,17 @@ public class AuditionIntegrationClient {
         } catch (final HttpClientErrorException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 log.error(AuditionConstants.POST_ID, id, AuditionConstants.NO_RECORD_FOUND);
-                throw new SystemException(AuditionConstants.NO_RECORD_FOUND + id, "Resource Not Found", 404,
-                    e); // Preserve stack trace
+                // No retry 404 which retry is unlikely to succeed
+                throw new BusinessException(AuditionConstants.NO_RECORD_FOUND,
+                    BusinessErrorCode.RESOURCE_NOT_FOUND.getCode(), e);
             } else {
                 log.error(AuditionConstants.POST_ID, e.getMessage(), e);
-                final String errorMessage = e.getResponseBodyAsString();
-                throw new SystemException(AuditionConstants.ERROR_RETRIEVING_POST + errorMessage,
-                    e.getStatusCode().toString(), e.getStatusCode().value(), e); // Preserve stack trace
+                throw curatedServerException(e, e.getResponseBodyAsString(),
+                    Integer.valueOf(id)); // Convert to SystemException
             }
+        } catch (RestClientException e) {
+            log.error(AuditionConstants.ERROR_RETRIEVING_POST, e);
+            throw curatedServerException(e, AuditionConstants.ERROR_RETRIEVING_POST, Integer.valueOf(id));
         }
     }
 
@@ -85,11 +102,25 @@ public class AuditionIntegrationClient {
             postComment.setComments(comments);
             log.info(RETURNING_POST_WITH_COMMENTS_FOR_ID, postId);
             return postComment;
+        } catch (final HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                log.error(AuditionConstants.POST_ID, AuditionConstants.NO_RECORD_FOUND);
+                // No retry 404 which retry is unlikely to succeed
+                throw new BusinessException(AuditionConstants.NO_RECORD_FOUND,
+                    BusinessErrorCode.RESOURCE_NOT_FOUND.getCode(), e);
+            } else {
+                log.error(AuditionConstants.POST_ID, e.getMessage(), e);
+                throw curatedServerException(e, e.getResponseBodyAsString(),
+                    null); // Convert to SystemException
+            }
+
         } catch (RestClientException e) {
             log.error(AuditionConstants.ERROR_FETCHING_POST_OR_COMMENTS_FOR_POST_ID, postId, e);
-            throw curatedServerException(e);
+            throw curatedServerException(e, AuditionConstants.ERROR_FETCHING_POST_OR_COMMENTS_FOR_POST_ID,
+                Integer.valueOf(postId));
         }
     }
+
 
     public List<Comment> getCommentsByPostId(final int postId) {
         try {
@@ -97,24 +128,44 @@ public class AuditionIntegrationClient {
             return restTemplate.getForObject(
                 auditionAPIUrl + COMMENTS_POST_ID + postId,
                 List.class);
+
+        } catch (final HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                log.error(AuditionConstants.POST_ID, AuditionConstants.NO_RECORD_FOUND);
+                // No retry 404 which retry is unlikely to succeed
+                throw new BusinessException(AuditionConstants.NO_RECORD_FOUND,
+                    BusinessErrorCode.RESOURCE_NOT_FOUND.getCode(), e);
+            } else {
+                log.error(AuditionConstants.POST_ID, e.getMessage(), e);
+                throw curatedServerException(e, e.getResponseBodyAsString(),
+                    null); // Convert to SystemException
+            }
+
         } catch (RestClientException e) {
             log.error(AuditionConstants.ERROR_FETCHING_COMMENTS_FOR_POST_ID, postId, e);
-            throw curatedServerException(e);
+            throw curatedServerException(e, AuditionConstants.ERROR_FETCHING_COMMENTS_FOR_POST_ID, postId);
         }
     }
 
-    public static SystemException curatedServerException(final RestClientException e) {
+
+    public static SystemException curatedServerException(final RestClientException e, final String message,
+        final Integer id) {
+        final String originalMessage = " Original message:" + message + " Post ID  " + id;
         if (e instanceof HttpClientErrorException clientError) {
             return new SystemException(
-                "Client error occurred (status " + clientError.getStatusCode() + "): " + clientError.getMessage(),
-                clientError.getStatusCode().value(), clientError); // Preserve stack trace
+                AuditionConstants.CLIENT_ERROR_OCCURRED + " (status " + clientError.getStatusCode() + "): "
+                    + clientError.getMessage()
+                    + originalMessage,
+                clientError.getStatusCode().value(), e);
         } else if (e instanceof HttpServerErrorException serverError) {
             return new SystemException(
-                "Server error occurred (status " + serverError.getStatusCode() + "): " + serverError.getMessage(),
-                serverError.getStatusCode().value(), serverError); // Preserve stack trace
+                AuditionConstants.SERVER_ERROR_OCCURRED + " (status " + serverError.getStatusCode() + "): "
+                    + serverError.getMessage()
+                    + originalMessage,
+                serverError.getStatusCode().value(), e);
         } else {
             return new SystemException(
-                "An error occurred: " + e.getMessage(), 500, e); // Preserve stack trace
+                "An error occurred: " + e.getMessage() + originalMessage, 500, e); // Preserve stack trace
         }
     }
 }

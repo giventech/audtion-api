@@ -3,11 +3,23 @@ package com.audition.common.exception;
 @SuppressWarnings("PMD")
 public class BusinessException extends RuntimeException {
 
-    public BusinessException(final String message) {
-        super(message);
+    private String businessErrorCode;
+    private String message;
+
+
+    public BusinessException(final String message, final String businessErrorCode, final Throwable cause) {
+        super(message, cause);
+        this.businessErrorCode = businessErrorCode;
+        this.message = message;
+
+
     }
 
-    public BusinessException(final String message, final Throwable cause) {
-        super(message, cause);
+    public String getBusinessErrorCode() {
+        return businessErrorCode;
+    }
+
+    public String getMessage() {
+        return message;
     }
 }
