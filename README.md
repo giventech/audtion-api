@@ -88,12 +88,12 @@ can/should be documented.
 Applicants can choose to do this in a separate markdown file that needs to be included when the code is committed.
 
 ### Starting the application
-Create the wrapper 
+
+Create the wrapper
 
 ```bash
 gradle wrapper
 ```
-
 
 Launch application with gradle from the root of the repository
 
@@ -285,6 +285,17 @@ This can be configured to changed to Cloudtrace exporters
 We use authomatic instrumentation telemetry to infer the least code changes.
 
 https://cloud.google.com/trace/docs/setup/java-ot#config-agent
+
+##### Observability
+
+### Collector to get the trace
+
+docker run --rm -p 4318:4318 -p 55680:55680 otel/opentelemetry-collector:latest
+
+### Opentelemetry Collector
+
+java -javaagent:lib/opentelemetry-javaagent.jar -DOTEL_TRACES_EXPORTER=console -jar
+build/libs/audition-api-0.0.1-SNAPSHOT.jar
 
 
 
