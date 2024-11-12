@@ -1,0 +1,22 @@
+# Set the Google Cloud project ID
+PROJECT_ID="certification-pool"
+
+# Roles for the user
+USER_ROLES=(
+  "roles/cloudbuild.builds.builder"  # User can trigger Cloud Build
+  "roles/iam.serviceAccountUser"     # User can use service accounts
+)
+
+# Roles for the service account
+SERVICE_ACCOUNT_ROLES=(
+  "roles/run.developer"  # Service account can perform builds
+  "roles/storage.admin"  # Service account can manage Cloud Storage
+  "roles/artifactregistry.writer"  # Service account can  integact with artifact registry artifactregistry.repositories.uploadArtifacts, artifactregistry.repositories.downloadArtifacts
+
+)
+
+# Assign roles to the user email or service account email
+USER_EMAIL="projectbantunt@gmail.com"  # Set this to your user email
+
+SERVICE_ACCOUNT_EMAIL=cloudbuild@certification-pool.iam.gserviceaccount.com
+#SERVICE_ACCOUNT_EMAIL="your-service-account@your-project.iam.gserviceaccount.com"  # Set this to your service account email

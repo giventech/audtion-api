@@ -1,0 +1,46 @@
+steps:
+  # Build unit tests only for faster performance and feedback
+  - name: gradle:8-jdk17
+    entrypoint: gradle
+    args: [ "test" ]
+    id: "unit_test_step"
+
+  # Package the application and dependencies as a jar file
+  - name: gradle:8-jdk17
+    entrypoint: gradle
+    id: "package_gradle"
+    args: [ "assemble" ]
+
+  # Build the Docker image using the jar file created from the previous steps
+  - name: gcr.io/cloud-builders/docker
+    args: [ 'build', '-t', 'australia-southeast2-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/audition-api:$SHORT_SHA', '--build-arg=JAR_FILE=build/libs/audition-api-1.0.0.jar', '.' ]
+    timeout: 600s
+    id: "build_image"
+    waitFor: [ 'unit_test_step' ]  # This step waits for integration_test_step to complete
+
+  # Push the Docker image to the artifact repository
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [ 'push', 'australia-southeast2-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/audition-api:$SHORT_SHA' ]
+    waitFor: [ 'build_image' ]  # This step waits for integration_test_step to complete
+    id: "artifactory_push"
+
+  # Deploy image from Container Registry to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'full-stack'
+      - '--image'
+      - 'australia-southeast2-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/audition-api:$SHORT_SHA'
+      - '--region'
+      - 'australia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--port'
+      - '8080'
+      - '--allow-unauthenticated'
+    waitFor: [ 'artifactory_push' ]  # This step waits for integration_test_step to complete
+
+timeout: 5000s
+options:
+  logging: CLOUD_LOGGING_ONLY

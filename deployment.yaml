@@ -1,0 +1,37 @@
+apiVersion: apps/v1  # Fixed the apiVersion to apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: audition-api
+  name: audition-api
+  namespace: default
+spec:
+  replicas: 28
+  selector:
+    matchLabels:
+      app: audition-api
+  template:
+    metadata:
+      labels:
+        app: audition-api
+    spec:
+      containers:
+        - image: australia-southeast2-docker.pkg.dev/certification-pool/audition-api/audition-api:328e9a4
+          name: weather-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: audition-api
+  name: audition-api
+  namespace: default
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: audition-api
+  sessionAffinity: None
+  type: LoadBalancer
