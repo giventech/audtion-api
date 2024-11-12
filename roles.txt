@@ -12,6 +12,7 @@ SERVICE_ACCOUNT_ROLES=(
   "roles/run.developer"  # Service account can perform builds
   "roles/storage.admin"  # Service account can manage Cloud Storage
   "roles/artifactregistry.writer"  # Service account can  integact with artifact registry artifactregistry.repositories.uploadArtifacts, artifactregistry.repositories.downloadArtifacts
+  "roles/logging.logWriter" # Service account can write log to cloud logging
 
 )
 
