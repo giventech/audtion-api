@@ -9,7 +9,7 @@ steps:
   - name: gradle:8-jdk17
     entrypoint: gradle
     id: "package_gradle"
-    args: [ "assemble" ]
+    args: [ 'assemble', '--info' ]
 
   # Build the Docker image using the jar file created from the previous steps
   - name: gcr.io/cloud-builders/docker
